@@ -1,183 +1,175 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
-import { UserPlus, Mail, Lock, User as UserIcon, Package } from 'lucide-react';
+import api from '../utils/api';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Package, TrendingUp, Users, Clock, ArrowRight, DollarSign } from 'lucide-react';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Link } from 'react-router-dom';
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'user'
+const Dashboard = () => {
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    recentOrders: []
   });
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const { data } = await api.get('/order');
+        const orders = data.data || [];
+
+        const totalRevenue = orders.reduce((acc, order) => acc + (order.amount || 0), 0);
+        const pendingOrders = orders.filter(o => o.status === 'pending').length;
+        const recentOrders = orders.slice(0, 5);
+
+        setStats({
+          totalOrders: orders.length,
+          totalRevenue,
+          pendingOrders,
+          recentOrders
+        });
+      } catch (error) {
+        console.error('Failed to fetch dashboard data', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const getStatusVariant = (status) => {
+    const variants = {
+      pending: 'warning',
+      processing: 'default',
+      shipped: 'secondary',
+      delivered: 'success',
+      cancelled: 'destructive'
+    };
+    return variants[status] || 'default';
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    setLoading(true);
-
-    const result = await register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role
-    });
-
-    if (result.success) {
-      toast.success('Registration successful!');
-      navigate('/dashboard');
-    } else {
-      toast.error(result.message);
-    }
-
-    setLoading(false);
-  };
+  const StatCard = ({ title, value, icon: Icon, description }) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {description}
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Package className="h-16 w-16 text-primary-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
-          <p className="text-gray-600 mt-2">Sign up to get started</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-                placeholder="John Doe"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-                placeholder="john@example.com"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="spinner border-white"></div>
-            ) : (
-              <>
-                <UserPlus className="h-5 w-5" />
-                <span>Create Account</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-semibold">
-              Sign in
-            </Link>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-gradient-primary">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Welcome back, {user?.name || 'User'}! Here's an overview of your store.
           </p>
         </div>
+        <Button asChild>
+          <Link to="/orders">Create New Order</Link>
+        </Button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Revenue"
+          value={`$${stats.totalRevenue.toLocaleString()}`}
+          icon={DollarSign}
+          description="+20.1% from last month"
+        />
+        <StatCard
+          title="Orders"
+          value={stats.totalOrders}
+          icon={Package}
+          description="+180 from last month"
+        />
+        <StatCard
+          title="Pending"
+          value={stats.pendingOrders}
+          icon={Clock}
+          description="Orders awaiting processing"
+        />
+        <StatCard
+          title="Active Users"
+          value="573"
+          icon={Users}
+          description="+201 since last hour"
+        />
+      </div>
+
+      {/* Recent Orders & Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+
+        {/* Recent Orders */}
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Recent Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center p-4">Loading...</div>
+            ) : (
+              <div className="space-y-6">
+                {stats.recentOrders.map((order) => (
+                  <div key={order._id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none text-white">
+                        {order.customerName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.product}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Badge variant={getStatusVariant(order.status)}>
+                        {order.status}
+                      </Badge>
+                      <div className="font-medium">
+                        ${order.amount.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {stats.recentOrders.length === 0 && (
+                  <p className="text-muted-foreground text-center py-4">No recent orders.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Activity / Placeholder Chart */}
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed border-white/10 rounded-md">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Chart Placeholder
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default Dashboard;

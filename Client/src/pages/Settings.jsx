@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import Navbar from '../components/Navbar';
-import { Settings as SettingsIcon, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Building2, Receipt, Bell } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 
 const Settings = () => {
   const [loading, setLoading] = useState(true);
@@ -64,175 +66,128 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="spinner"></div>
-        </div>
-      </>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
     );
   }
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 flex items-center space-x-2">
-              <SettingsIcon className="h-8 w-8" />
-              <span>System Settings</span>
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Configure your order tracking system preferences
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow">
-            <div className="p-6 space-y-6">
-              {/* Company Information */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
-                  Company Information
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Email
-                    </label>
-                    <input
-                      type="email"
-                      name="companyEmail"
-                      value={formData.companyEmail}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="companyPhone"
-                      value={formData.companyPhone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Configuration */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
-                  Order Configuration
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Order Prefix
-                    </label>
-                    <input
-                      type="text"
-                      name="orderPrefix"
-                      value={formData.orderPrefix}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Currency
-                    </label>
-                    <select
-                      name="currency"
-                      value={formData.currency}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    >
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="INR">INR (₹)</option>
-                      <option value="JPY">JPY (¥)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tax Rate (%)
-                    </label>
-                    <input
-                      type="number"
-                      name="taxRate"
-                      value={formData.taxRate}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="100"
-                      step="0.01"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notifications */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
-                  Notifications
-                </h2>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    name="enableNotifications"
-                    checked={formData.enableNotifications}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <label className="text-sm font-medium text-gray-700">
-                    Enable email notifications for order updates
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Save Button */}
-            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <div className="spinner border-white"></div>
-                ) : (
-                  <>
-                    <Save className="h-5 w-5" />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+    <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gradient-primary flex items-center gap-2">
+            <SettingsIcon className="h-8 w-8 text-primary" />
+            System Settings
+          </h1>
+          <p className="text-muted-foreground">Configure your order tracking system preferences</p>
         </div>
       </div>
-    </>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Company Information */}
+        <Card className="border-white/5 bg-white/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              <CardTitle>Company Information</CardTitle>
+            </div>
+            <CardDescription>Enter your business details that will appear on invoices.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-sm font-medium text-gray-200">Company Name</label>
+                <Input name="companyName" value={formData.companyName} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-200">Company Email</label>
+                <Input type="email" name="companyEmail" value={formData.companyEmail} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-200">Company Phone</label>
+                <Input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Order Configuration */}
+        <Card className="border-white/5 bg-white/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-purple-500" />
+              <CardTitle>Order Configuration</CardTitle>
+            </div>
+            <CardDescription>Customize how orders are processed and displayed.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-200">Order Prefix</label>
+                <Input name="orderPrefix" value={formData.orderPrefix} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-200">Currency</label>
+                <select
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleInputChange}
+                  className="w-full h-10 px-3 rounded-md border border-white/10 bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-white"
+                >
+                  <option value="USD" className="bg-surface">USD ($)</option>
+                  <option value="EUR" className="bg-surface">EUR (€)</option>
+                  <option value="GBP" className="bg-surface">GBP (£)</option>
+                  <option value="INR" className="bg-surface">INR (₹)</option>
+                  <option value="JPY" className="bg-surface">JPY (¥)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-200">Tax Rate (%)</label>
+                <Input type="number" name="taxRate" min="0" max="100" step="0.01" value={formData.taxRate} onChange={handleInputChange} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notifications */}
+        <Card className="border-white/5 bg-white/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-yellow-500" />
+              <CardTitle>Notifications</CardTitle>
+            </div>
+            <CardDescription>Manage your email alert preferences.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-3 p-4 border border-white/5 rounded-lg bg-black/20">
+              <input
+                type="checkbox"
+                name="enableNotifications"
+                checked={formData.enableNotifications}
+                onChange={handleInputChange}
+                className="w-5 h-5 text-primary rounded focus:ring-primary/50 bg-black/20 border-white/10"
+              />
+              <label className="text-sm font-medium text-gray-200">
+                Enable email notifications for order updates
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Save Button */}
+        <div className="flex justify-end pt-4">
+          <Button type="submit" disabled={saving} size="lg" className="w-full md:w-auto">
+            {saving ? 'Saving...' : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Settings
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

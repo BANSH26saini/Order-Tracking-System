@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import Navbar from '../components/Navbar';
 import {
   Plus,
   Search,
@@ -10,11 +8,15 @@ import {
   Trash2,
   Eye,
   X,
-  Package
+  Package,
+  Filter
 } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
 
 const Orders = () => {
-  const { isAdmin } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,20 +104,8 @@ const Orders = () => {
       setSelectedOrder(order);
       if (mode === 'edit') {
         setFormData({
-          customerName: order.customerName,
-          customerEmail: order.customerEmail,
-          customerPhone: order.customerPhone,
-          product: order.product,
-          quantity: order.quantity,
-          amount: order.amount,
-          status: order.status,
-          shippingAddress: order.shippingAddress || {
-            street: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            country: ''
-          },
+          ...order,
+          shippingAddress: order.shippingAddress || { street: '', city: '', state: '', zipCode: '', country: '' },
           notes: order.notes || ''
         });
       }
@@ -157,460 +147,235 @@ const Orders = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
+  const getStatusVariant = (status) => {
+    const variants = {
+      pending: 'warning',
+      processing: 'default', // blue
+      shipped: 'secondary', // purple
+      delivered: 'success', // green
+      cancelled: 'destructive' // red
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return variants[status] || 'outline';
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Orders Management</h1>
-            <button
-              onClick={() => openModal('create')}
-              className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition flex items-center space-x-2"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Create Order</span>
-            </button>
-          </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gradient-primary">Orders Management</h1>
+          <p className="text-muted-foreground">Manage and track your customer orders</p>
+        </div>
+        <Button onClick={() => openModal('create')} className="shadow-lg shadow-primary/20">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Order
+        </Button>
+      </div>
 
-          {/* Filters */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by order number, customer, product..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                />
-              </div>
+      {/* Filters */}
+      <Card className="border-white/5 bg-white/5">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-black/20 border-white/10"
+              />
+            </div>
+            <div className="relative w-full md:w-[200px]">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full h-10 pl-9 pr-4 rounded-md border border-white/10 bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-white appearance-none cursor-pointer"
               >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="" className="bg-surface text-white">All Status</option>
+                <option value="pending" className="bg-surface text-white">Pending</option>
+                <option value="processing" className="bg-surface text-white">Processing</option>
+                <option value="shipped" className="bg-surface text-white">Shipped</option>
+                <option value="delivered" className="bg-surface text-white">Delivered</option>
+                <option value="cancelled" className="bg-surface text-white">Cancelled</option>
               </select>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Orders Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="spinner"></div>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No orders found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Order #
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Product
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {orders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {order.orderNumber}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{order.customerName}</div>
-                          <div className="text-sm text-gray-500">{order.customerEmail}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {order.product}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {order.quantity}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          ${order.amount.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                              order.status
-                            )}`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => openModal('view', order)}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View"
-                            >
-                              <Eye className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => openModal('edit', order)}
-                              className="text-green-600 hover:text-green-900"
-                              title="Edit"
-                            >
-                              <Edit2 className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(order._id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+      {/* Orders Table */}
+      <Card className="overflow-hidden border-white/5 bg-white/5">
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground">No orders found</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm text-left">
+              <thead className="bg-white/5 text-muted-foreground font-medium border-b border-white/5">
+                <tr>
+                  <th className="px-6 py-4">Order #</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Product</th>
+                  <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {orders.map((order) => (
+                  <tr key={order._id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4 font-medium text-white">{order.orderNumber}</td>
+                    <td className="px-6 py-4">
+                      <div className="text-white">{order.customerName}</div>
+                      <div className="text-muted-foreground text-xs">{order.customerEmail}</div>
+                    </td>
+                    <td className="px-6 py-4 text-gray-300">{order.product}</td>
+                    <td className="px-6 py-4 font-medium text-white">${order.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant={getStatusVariant(order.status)}>
+                        {order.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-gray-400">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button variant="ghost" size="icon" onClick={() => openModal('view', order)}>
+                          <Eye className="h-4 w-4 text-blue-400" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openModal('edit', order)}>
+                          <Edit2 className="h-4 w-4 text-green-400" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(order._id)}>
+                          <Trash2 className="h-4 w-4 text-red-400" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-      </div>
+      </Card>
 
-      {/* Modal */}
+      {/* Modal Overlay */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          {/* Modal Content */}
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-white/10 bg-[#121214] shadow-2xl animate-in zoom-in-95 duration-200">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 sticky top-0 bg-[#121214] z-10">
+              <CardTitle>
                 {modalMode === 'create' && 'Create New Order'}
                 {modalMode === 'edit' && 'Edit Order'}
                 {modalMode === 'view' && 'Order Details'}
-              </h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={closeModal}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
 
-            {modalMode === 'view' ? (
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Order Number</p>
-                    <p className="font-semibold">{selectedOrder?.orderNumber}</p>
+            <CardContent className="p-6">
+              {modalMode === 'view' ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div><p className="text-muted-foreground text-sm">Order Number</p><p className="font-semibold text-white">{selectedOrder?.orderNumber}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Status</p><Badge variant={getStatusVariant(selectedOrder?.status)}>{selectedOrder?.status}</Badge></div>
+                    <div><p className="text-muted-foreground text-sm">Customer</p><p className="font-semibold text-white">{selectedOrder?.customerName}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Email</p><p className="text-white">{selectedOrder?.customerEmail}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Phone</p><p className="text-white">{selectedOrder?.customerPhone}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Product</p><p className="text-white">{selectedOrder?.product}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Quantity</p><p className="text-white">{selectedOrder?.quantity}</p></div>
+                    <div><p className="text-muted-foreground text-sm">Amount</p><p className="text-white font-semibold">${selectedOrder?.amount.toFixed(2)}</p></div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                        selectedOrder?.status
-                      )}`}
-                    >
-                      {selectedOrder?.status}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Customer Name</p>
-                    <p className="font-semibold">{selectedOrder?.customerName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-semibold">{selectedOrder?.customerEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Phone</p>
-                    <p className="font-semibold">{selectedOrder?.customerPhone}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Product</p>
-                    <p className="font-semibold">{selectedOrder?.product}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Quantity</p>
-                    <p className="font-semibold">{selectedOrder?.quantity}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Amount</p>
-                    <p className="font-semibold">${selectedOrder?.amount.toFixed(2)}</p>
-                  </div>
-                </div>
-                {selectedOrder?.shippingAddress && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Shipping Address</p>
-                    <p className="text-sm">
-                      {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.city},{' '}
-                      {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode},{' '}
-                      {selectedOrder.shippingAddress.country}
+                  <div className="border-t border-white/10 pt-4">
+                    <h4 className="font-semibold text-white mb-2">Shipping Address</h4>
+                    <p className="text-gray-400 text-sm">
+                      {selectedOrder?.shippingAddress?.street}, {selectedOrder?.shippingAddress?.city}, {selectedOrder?.shippingAddress?.state} {selectedOrder?.shippingAddress?.zipCode}, {selectedOrder?.shippingAddress?.country}
                     </p>
                   </div>
-                )}
-                {selectedOrder?.notes && (
-                  <div>
-                    <p className="text-sm text-gray-600">Notes</p>
-                    <p className="text-sm">{selectedOrder.notes}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm text-gray-600">Created At</p>
-                  <p className="text-sm">{new Date(selectedOrder?.createdAt).toLocaleString()}</p>
+                  {selectedOrder?.notes && (
+                    <div className="border-t border-white/10 pt-4">
+                      <h4 className="font-semibold text-white mb-2">Notes</h4>
+                      <p className="text-gray-400 text-sm">{selectedOrder.notes}</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Customer Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="customerName"
-                      value={formData.customerName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Customer Email *
-                    </label>
-                    <input
-                      type="email"
-                      name="customerEmail"
-                      value={formData.customerEmail}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Customer Phone *
-                    </label>
-                    <input
-                      type="tel"
-                      name="customerPhone"
-                      value={formData.customerPhone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product *
-                    </label>
-                    <input
-                      type="text"
-                      name="product"
-                      value={formData.product}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantity *
-                    </label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      min="1"
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Amount *
-                    </label>
-                    <input
-                      type="number"
-                      name="amount"
-                      value={formData.amount}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.01"
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-semibold mb-3">Shipping Address</h3>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Street
-                      </label>
-                      <input
-                        type="text"
-                        name="shippingAddress.street"
-                        value={formData.shippingAddress.street}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Customer Name</label>
+                      <Input name="customerName" value={formData.customerName} onChange={handleInputChange} required />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        name="shippingAddress.city"
-                        value={formData.shippingAddress.city}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Email</label>
+                      <Input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleInputChange} required />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        name="shippingAddress.state"
-                        value={formData.shippingAddress.state}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Phone</label>
+                      <Input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleInputChange} required />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zip Code
-                      </label>
-                      <input
-                        type="text"
-                        name="shippingAddress.zipCode"
-                        value={formData.shippingAddress.zipCode}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Product</label>
+                      <Input name="product" value={formData.product} onChange={handleInputChange} required />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Country
-                      </label>
-                      <input
-                        type="text"
-                        name="shippingAddress.country"
-                        value={formData.shippingAddress.country}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Quantity</label>
+                      <Input type="number" name="quantity" min="1" value={formData.quantity} onChange={handleInputChange} required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Amount</label>
+                      <Input type="number" name="amount" min="0" step="0.01" value={formData.amount} onChange={handleInputChange} required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Status</label>
+                      <select name="status" value={formData.status} onChange={handleInputChange} className="w-full h-10 px-3 rounded-md border border-white/10 bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-white">
+                        <option value="pending" className="bg-surface">Pending</option>
+                        <option value="processing" className="bg-surface">Processing</option>
+                        <option value="shipped" className="bg-surface">Shipped</option>
+                        <option value="delivered" className="bg-surface">Delivered</option>
+                        <option value="cancelled" className="bg-surface">Cancelled</option>
+                      </select>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                  ></textarea>
-                </div>
+                  <div className="border-t border-white/10 pt-4 space-y-4">
+                    <h4 className="font-semibold text-white">Shipping Address</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input name="shippingAddress.street" placeholder="Street" value={formData.shippingAddress.street} onChange={handleInputChange} className="md:col-span-2" />
+                      <Input name="shippingAddress.city" placeholder="City" value={formData.shippingAddress.city} onChange={handleInputChange} />
+                      <Input name="shippingAddress.state" placeholder="State" value={formData.shippingAddress.state} onChange={handleInputChange} />
+                      <Input name="shippingAddress.zipCode" placeholder="Zip Code" value={formData.shippingAddress.zipCode} onChange={handleInputChange} />
+                      <Input name="shippingAddress.country" placeholder="Country" value={formData.shippingAddress.country} onChange={handleInputChange} />
+                    </div>
+                  </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-                  >
-                    {modalMode === 'create' ? 'Create Order' : 'Update Order'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Notes</label>
+                    <textarea name="notes" rows="3" value={formData.notes} onChange={handleInputChange} className="w-full px-3 py-2 rounded-md border border-white/10 bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-white placeholder:text-muted-foreground"></textarea>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-white/10">
+                    <Button type="button" variant="ghost" onClick={closeModal}>Cancel</Button>
+                    <Button type="submit">{modalMode === 'create' ? 'Create Order' : 'Update Order'}</Button>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

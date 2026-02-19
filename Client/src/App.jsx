@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 
 // Pages
 import Login from './pages/Login';
@@ -21,8 +22,9 @@ function App() {
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#363636',
+              background: '#1e1e1e',
               color: '#fff',
+              border: '1px solid rgba(255,255,255,0.1)',
             },
             success: {
               duration: 3000,
@@ -50,7 +52,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Layout>
+                  <Dashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -58,7 +62,9 @@ function App() {
             path="/orders"
             element={
               <ProtectedRoute>
-                <Orders />
+                <Layout>
+                  <Orders />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -68,7 +74,9 @@ function App() {
             path="/users"
             element={
               <ProtectedRoute adminOnly={true}>
-                <Users />
+                <Layout>
+                  <Users />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -76,7 +84,9 @@ function App() {
             path="/reports"
             element={
               <ProtectedRoute adminOnly={true}>
-                <Reports />
+                <Layout>
+                  <Reports />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -84,14 +94,16 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute adminOnly={true}>
-                <Settings />
+                <Layout>
+                  <Settings />
+                </Layout>
               </ProtectedRoute>
             }
           />
 
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
+
           {/* 404 Route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
