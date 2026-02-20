@@ -108,4 +108,4 @@ If you need to access the administrative dashboard, use the following credential
 This project is licensed under the ISC License.
 
 ---
-Built with ❤️ by [Your Name/Company]
+Built with ❤️ by Bansh Saini
