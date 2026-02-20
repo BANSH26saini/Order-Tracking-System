@@ -6,7 +6,7 @@ const Order = require('../models/Order');
 exports.getOrders = async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10 } = req.query;
-    
+
     let query = {};
 
     // Filter by status if provided
@@ -94,6 +94,7 @@ exports.getOrder = async (req, res) => {
 // @access  Private
 exports.createOrder = async (req, res) => {
   try {
+    console.log('Creating order with body:', req.body);
     // Add user to req.body
     req.body.createdBy = req.user.id;
 
@@ -105,6 +106,7 @@ exports.createOrder = async (req, res) => {
       data: order
     });
   } catch (error) {
+    console.error('Error creating order:', error);
     res.status(400).json({
       success: false,
       message: 'Error creating order',
