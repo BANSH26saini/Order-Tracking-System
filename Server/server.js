@@ -64,15 +64,28 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${port}`);
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error(err);
+    }
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.log(`Error: ${err.message}`);
+    // Close server & exit process
+    server.close(() => process.exit(1));
+  });
+};
+
+startServer(PORT);
